@@ -2,5 +2,5 @@
 #![warn(clippy::nursery)]
 #![allow(clippy::module_name_repetitions)]
 
-mod fraction;
-mod matrix;
+pub mod fraction;
+pub mod matrix;
