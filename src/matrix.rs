@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use crate::bail;
+use raise::yeet;
 
 struct Matrix {
 	m: NonZeroUsize,
@@ -16,16 +16,16 @@ enum NewMatrixError {
 
 impl Matrix {
 	pub fn new(columns: &[&[f64]]) -> Result<Self, NewMatrixError> {
-		let m = columns.len();
-		let n = columns.get(0).ok_or(NewMatrixError::ZeroSize)?.len();
+		let n = columns.len();
+		let m = columns.get(0).ok_or(NewMatrixError::ZeroSize)?.len();
 		let mut buffer = Vec::with_capacity(m * n);
 
 		for column in columns {
-			if column.len() != n {
-				bail!(NewMatrixError::InconsistentSize);
+			if column.len() != m {
+				yeet!(NewMatrixError::InconsistentSize);
 			}
 
-			for j in 0..n {
+			for j in 0..m {
 				buffer.push(*column.get(j).ok_or(NewMatrixError::InconsistentSize)?);
 			}
 		}
