@@ -4,18 +4,6 @@ use core::num::ParseIntError;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use core::str::FromStr;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ParseFractionError {
-	BadInteger(ParseIntError),
-	ZeroDenominator,
-}
-
-impl From<ParseIntError> for ParseFractionError {
-	fn from(e: ParseIntError) -> Self {
-		Self::BadInteger(e)
-	}
-}
-
 /// Uses Stein's algorithm to calculate the gcd of two numbers
 const fn gcd(mut a: u16, mut b: u16) -> u16 {
 	// returns the other if one of the two numbers are zero
@@ -132,6 +120,18 @@ impl Fraction32 {
 		let denominator = self.numerator.unsigned_abs().try_into().ok()?;
 
 		Some(Self::new(numerator, denominator))
+	}
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ParseFractionError {
+	BadInteger(ParseIntError),
+	ZeroDenominator,
+}
+
+impl From<ParseIntError> for ParseFractionError {
+	fn from(e: ParseIntError) -> Self {
+		Self::BadInteger(e)
 	}
 }
 
