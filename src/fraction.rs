@@ -1,3 +1,4 @@
+use core::fmt::{self, Display};
 use core::num::NonZeroU16;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
@@ -120,12 +121,42 @@ impl Fraction32 {
 	}
 }
 
+impl PartialOrd<Self> for Fraction32 {
+	fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+		let lcm = lcm(self.denominator.get(), other.denominator.get());
+		let self_scale: i16 = (lcm / self.denominator).try_into().ok()?;
+		let other_scale: i16 = (lcm / other.denominator).try_into().ok()?;
+
+		(self.numerator * self_scale).partial_cmp(&(other.numerator * other_scale))
+	}
+}
+
+impl Ord for Fraction32 {
+	fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+		self.partial_cmp(other).unwrap()
+	}
+}
+
+impl Display for Fraction32 {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}/{}", self.numerator, self.denominator)
+	}
+}
+
+impl From<i16> for Fraction32 {
+	fn from(v: i16) -> Self {
+		Self::whole(v)
+	}
+}
+
 impl Add<Self> for Fraction32 {
 	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self::Output {
 		let denominator = lcm(self.denominator.get(), rhs.denominator.get());
-		let numerator = self.numerator + rhs.numerator;
+		let self_scale: i16 = (denominator / self.denominator).try_into().ok().unwrap();
+		let other_scale: i16 = (denominator / rhs.denominator).try_into().ok().unwrap();
+		let numerator = self.numerator * self_scale + rhs.numerator * other_scale;
 		Self::new(numerator, NonZeroU16::new(denominator).unwrap())
 	}
 }
