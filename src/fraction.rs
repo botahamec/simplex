@@ -1,6 +1,20 @@
 use core::fmt::{self, Display};
 use core::num::NonZeroU16;
+use core::num::ParseIntError;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use core::str::FromStr;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ParseFractionError {
+	BadInteger(ParseIntError),
+	ZeroDenominator,
+}
+
+impl From<ParseIntError> for ParseFractionError {
+	fn from(e: ParseIntError) -> Self {
+		Self::BadInteger(e)
+	}
+}
 
 /// Uses Stein's algorithm to calculate the gcd of two numbers
 const fn gcd(mut a: u16, mut b: u16) -> u16 {
@@ -118,6 +132,22 @@ impl Fraction32 {
 		let denominator = self.numerator.unsigned_abs().try_into().ok()?;
 
 		Some(Self::new(numerator, denominator))
+	}
+}
+
+impl FromStr for Fraction32 {
+	type Err = ParseFractionError;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		if let Some((numerator, denominator)) = s.split_once('/') {
+			let numerator = numerator.parse()?;
+			let denominator = denominator.parse()?;
+			let denominator =
+				NonZeroU16::new(denominator).ok_or(ParseFractionError::ZeroDenominator)?;
+
+			Ok(Self::new(numerator, denominator))
+		} else {
+			Ok(Self::whole(s.parse()?))
+		}
 	}
 }
 
