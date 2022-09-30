@@ -56,4 +56,20 @@ impl Matrix {
 			buffer,
 		}
 	}
+
+	pub fn get(&self, row: usize, col: usize) -> Option<&Fraction32> {
+		if row < self.m.get() || col < self.n.get() {
+			return None;
+		}
+
+		self.buffer.get(col * self.n.get() + row)
+	}
+
+	pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut Fraction32> {
+		if row < self.m.get() || col < self.n.get() {
+			return None;
+		}
+
+		self.buffer.get_mut(col * self.n.get() + row)
+	}
 }
