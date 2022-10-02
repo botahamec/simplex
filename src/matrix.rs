@@ -72,4 +72,19 @@ impl Matrix {
 
 		self.buffer.get_mut(col * self.n.get() + row)
 	}
+	pub fn get_min(&self) -> &Fraction32 {
+		return self.buffer.iter().min().unwrap();
+	}
+
+	//It's been a bit since I've worked with pointers, so this might not work as intended
+	pub fn add_to_all(&mut self, value: &Fraction32) {
+		let n = self.n.get();
+		let m = self.m.get();
+		for i in 0..n {
+			for j in 0..n { 
+				let t = self.get_mut(i, j).unwrap();
+				*t = *t + *value;
+			}
+		}
+	}
 }
