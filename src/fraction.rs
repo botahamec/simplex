@@ -1,11 +1,11 @@
 use core::fmt::{self, Display};
-use core::num::NonZeroU16;
 use core::num::ParseIntError;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use core::str::FromStr;
+use std::num::NonZeroUsize;
 
 /// Uses Stein's algorithm to calculate the gcd of two numbers
-const fn gcd(mut a: u16, mut b: u16) -> u16 {
+const fn gcd(mut a: usize, mut b: usize) -> usize {
 	// returns the other if one of the two numbers are zero
 	if a == 0 || b == 0 {
 		return a | b;
@@ -31,18 +31,18 @@ const fn gcd(mut a: u16, mut b: u16) -> u16 {
 	a << shift
 }
 
-const fn lcm(a: u16, b: u16) -> u16 {
+const fn lcm(a: usize, b: usize) -> usize {
 	let gcd = gcd(a, b);
 	a * b / gcd
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Fraction32 {
-	numerator: i16,
-	denominator: NonZeroU16,
+pub struct Fraction {
+	numerator: isize,
+	denominator: NonZeroUsize,
 }
 
-impl Fraction32 {
+impl Fraction {
 	pub const ZERO: Self = Self::whole(0);
 	pub const ONE: Self = Self::whole(1);
 	pub const NEG_ONE: Self = Self::whole(-1);
@@ -51,16 +51,16 @@ impl Fraction32 {
 	///
 	/// # Panics
 	///
-	/// This panics if the denominator is larger than `i16::MAX`
+	/// This panics if the denominator is larger than `isize::MAX`
 	#[must_use]
-	pub fn new(numerator: i16, denominator: NonZeroU16) -> Self {
+	pub fn new(numerator: isize, denominator: NonZeroUsize) -> Self {
 		let this = Self {
 			numerator,
 			denominator,
 		};
 
 		// check for a denominator that's too large
-		assert!(denominator.get() <= i16::MAX.unsigned_abs());
+		assert!(denominator.get() <= isize::MAX.unsigned_abs());
 
 		// simplify the fraction
 		this.reduce()
@@ -68,7 +68,7 @@ impl Fraction32 {
 
 	/// Create a fraction from a whole number
 	#[must_use]
-	pub const fn whole(num: i16) -> Self {
+	pub const fn whole(num: isize) -> Self {
 		// safety: one is neither zero, nor greater than 35,000
 		unsafe { Self::new_unchecked(num, 1) }
 	}
@@ -79,20 +79,20 @@ impl Fraction32 {
 	///
 	/// The `denominator` cannot be zero, or larger than `i16::MAX`
 	#[must_use]
-	pub const unsafe fn new_unchecked(numerator: i16, denominator: u16) -> Self {
+	pub const unsafe fn new_unchecked(numerator: isize, denominator: usize) -> Self {
 		Self {
 			numerator,
-			denominator: NonZeroU16::new_unchecked(denominator),
+			denominator: NonZeroUsize::new_unchecked(denominator),
 		}
 	}
 
 	#[must_use]
-	pub const fn numerator(self) -> i16 {
+	pub const fn numerator(self) -> isize {
 		self.numerator
 	}
 
 	#[must_use]
-	pub const fn denominator(self) -> NonZeroU16 {
+	pub const fn denominator(self) -> NonZeroUsize {
 		self.denominator
 	}
 
@@ -105,7 +105,7 @@ impl Fraction32 {
 		}
 
 		let gcd = gcd(self.numerator.unsigned_abs(), self.denominator.get());
-		let numerator = self.numerator / i16::try_from(gcd).unwrap();
+		let numerator = self.numerator / isize::try_from(gcd).unwrap();
 		let denominator = self.denominator.get() / gcd;
 
 		Self::new(numerator, denominator.try_into().unwrap())
@@ -116,7 +116,7 @@ impl Fraction32 {
 	#[must_use]
 	#[allow(clippy::missing_panics_doc)]
 	pub fn reciprocal(self) -> Option<Self> {
-		let numerator = i16::try_from(self.denominator.get()).unwrap() * self.numerator.signum();
+		let numerator = isize::try_from(self.denominator.get()).unwrap() * self.numerator.signum();
 		let denominator = self.numerator.unsigned_abs().try_into().ok()?;
 
 		Some(Self::new(numerator, denominator))
@@ -135,14 +135,14 @@ impl From<ParseIntError> for ParseFractionError {
 	}
 }
 
-impl FromStr for Fraction32 {
+impl FromStr for Fraction {
 	type Err = ParseFractionError;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		if let Some((numerator, denominator)) = s.split_once('/') {
 			let numerator = numerator.parse()?;
 			let denominator = denominator.parse()?;
 			let denominator =
-				NonZeroU16::new(denominator).ok_or(ParseFractionError::ZeroDenominator)?;
+				NonZeroUsize::new(denominator).ok_or(ParseFractionError::ZeroDenominator)?;
 
 			Ok(Self::new(numerator, denominator))
 		} else {
@@ -151,53 +151,53 @@ impl FromStr for Fraction32 {
 	}
 }
 
-impl PartialOrd<Self> for Fraction32 {
+impl PartialOrd<Self> for Fraction {
 	fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
 		let lcm = lcm(self.denominator.get(), other.denominator.get());
-		let self_scale: i16 = (lcm / self.denominator).try_into().ok()?;
-		let other_scale: i16 = (lcm / other.denominator).try_into().ok()?;
+		let self_scale: isize = (lcm / self.denominator).try_into().ok()?;
+		let other_scale: isize = (lcm / other.denominator).try_into().ok()?;
 
 		(self.numerator * self_scale).partial_cmp(&(other.numerator * other_scale))
 	}
 }
 
-impl Ord for Fraction32 {
+impl Ord for Fraction {
 	fn cmp(&self, other: &Self) -> core::cmp::Ordering {
 		self.partial_cmp(other).unwrap()
 	}
 }
 
-impl Display for Fraction32 {
+impl Display for Fraction {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}/{}", self.numerator, self.denominator)
 	}
 }
 
-impl From<i16> for Fraction32 {
-	fn from(v: i16) -> Self {
+impl From<isize> for Fraction {
+	fn from(v: isize) -> Self {
 		Self::whole(v)
 	}
 }
 
-impl Add<Self> for Fraction32 {
+impl Add<Self> for Fraction {
 	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self::Output {
 		let denominator = lcm(self.denominator.get(), rhs.denominator.get());
-		let self_scale: i16 = (denominator / self.denominator).try_into().ok().unwrap();
-		let other_scale: i16 = (denominator / rhs.denominator).try_into().ok().unwrap();
+		let self_scale: isize = (denominator / self.denominator).try_into().ok().unwrap();
+		let other_scale: isize = (denominator / rhs.denominator).try_into().ok().unwrap();
 		let numerator = self.numerator * self_scale + rhs.numerator * other_scale;
-		Self::new(numerator, NonZeroU16::new(denominator).unwrap())
+		Self::new(numerator, NonZeroUsize::new(denominator).unwrap())
 	}
 }
 
-impl AddAssign<Self> for Fraction32 {
+impl AddAssign<Self> for Fraction {
 	fn add_assign(&mut self, rhs: Self) {
 		*self = *self + rhs;
 	}
 }
 
-impl Sub<Self> for Fraction32 {
+impl Sub<Self> for Fraction {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self::Output {
@@ -205,13 +205,13 @@ impl Sub<Self> for Fraction32 {
 	}
 }
 
-impl SubAssign<Self> for Fraction32 {
+impl SubAssign<Self> for Fraction {
 	fn sub_assign(&mut self, rhs: Self) {
 		*self = *self - rhs;
 	}
 }
 
-impl Mul<Self> for Fraction32 {
+impl Mul<Self> for Fraction {
 	type Output = Self;
 
 	fn mul(self, rhs: Self) -> Self::Output {
@@ -222,13 +222,13 @@ impl Mul<Self> for Fraction32 {
 	}
 }
 
-impl MulAssign<Self> for Fraction32 {
+impl MulAssign<Self> for Fraction {
 	fn mul_assign(&mut self, rhs: Self) {
 		*self = *self * rhs;
 	}
 }
 
-impl Div<Self> for Fraction32 {
+impl Div<Self> for Fraction {
 	type Output = Self;
 
 	fn div(self, rhs: Self) -> Self::Output {
@@ -236,7 +236,7 @@ impl Div<Self> for Fraction32 {
 	}
 }
 
-impl DivAssign<Self> for Fraction32 {
+impl DivAssign<Self> for Fraction {
 	fn div_assign(&mut self, rhs: Self) {
 		*self = *self / rhs;
 	}

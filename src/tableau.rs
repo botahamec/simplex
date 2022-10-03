@@ -1,12 +1,12 @@
-use crate::fraction::Fraction32;
+use crate::fraction::Fraction;
 use crate::matrix::Matrix;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct Tableau {
 	left: Matrix,
 	right: Matrix,
-	bottom_row: Vec<Fraction32>,
-	right_column: Vec<Fraction32>,
+	bottom_row: Vec<Fraction>,
+	right_column: Vec<Fraction>,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
