@@ -36,7 +36,7 @@ const fn lcm(a: u16, b: u16) -> u16 {
 	a * b / gcd
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Fraction32 {
 	numerator: i16,
 	denominator: NonZeroU16,

@@ -4,19 +4,25 @@ use raise::yeet;
 
 use crate::fraction::Fraction32;
 
-struct Matrix {
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Matrix {
 	m: NonZeroUsize,
 	n: NonZeroUsize,
 	buffer: Vec<Fraction32>,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-enum NewMatrixError {
+pub enum NewMatrixError {
 	ZeroSize,
 	InconsistentSize,
 }
 
 impl Matrix {
+	/// Creates a new matrix
+	///
+	/// # Errors
+	///
+	/// Returns an error if the columns are inconsistently sized, or there are no columns, or no rows
 	pub fn new(columns: &[&[Fraction32]]) -> Result<Self, NewMatrixError> {
 		let n = columns.len();
 		let m = columns.get(0).ok_or(NewMatrixError::ZeroSize)?.len();
@@ -37,6 +43,7 @@ impl Matrix {
 		Ok(Self { m, n, buffer })
 	}
 
+	#[must_use]
 	pub fn identity(size: NonZeroUsize) -> Self {
 		let n = size.get();
 		let mut buffer = Vec::with_capacity(n * n);
@@ -57,6 +64,7 @@ impl Matrix {
 		}
 	}
 
+	#[must_use]
 	pub fn get(&self, row: usize, col: usize) -> Option<&Fraction32> {
 		if row < self.m.get() || col < self.n.get() {
 			return None;
@@ -65,6 +73,7 @@ impl Matrix {
 		self.buffer.get(col * self.n.get() + row)
 	}
 
+	#[must_use]
 	pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut Fraction32> {
 		if row < self.m.get() || col < self.n.get() {
 			return None;
@@ -72,18 +81,21 @@ impl Matrix {
 
 		self.buffer.get_mut(col * self.n.get() + row)
 	}
+
+	#[must_use]
+	#[allow(clippy::missing_panics_doc)]
 	pub fn get_min(&self) -> &Fraction32 {
 		return self.buffer.iter().min().unwrap();
 	}
 
-	//It's been a bit since I've worked with pointers, so this might not work as intended
+	#[allow(clippy::missing_panics_doc)]
 	pub fn add_to_all(&mut self, value: &Fraction32) {
 		let n = self.n.get();
 		let m = self.m.get();
-		for i in 0..n {
-			for j in 0..n { 
+		for i in 0..m {
+			for j in 0..n {
 				let t = self.get_mut(i, j).unwrap();
-				*t = *t + *value;
+				*t += *value;
 			}
 		}
 	}

@@ -1,33 +1,21 @@
 use crate::fraction::Fraction32;
 use crate::matrix::Matrix;
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct Tableau {
-    left: Matrix,
-    right: Matrix,
-    botRow: Vec<Fraction32>,
-    rightCol: Vec<Fraction32>,
+	left: Matrix,
+	right: Matrix,
+	bottom_row: Vec<Fraction32>,
+	right_column: Vec<Fraction32>,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-enum NewTableauError {
-
-}
-
+enum NewTableauError {}
 
 impl Tableau {
-    pub fn new() {
-        
-    }
+	pub fn new() {}
 
-    pub fn updateTableau() {
+	pub fn update_tableau() {}
 
-    }
-
-    pub fn findPivot() {
-
-    }
-
-    pub fn printTableau() {
-
-    }
+	pub fn find_pivot() {}
 }
